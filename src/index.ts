@@ -10,9 +10,20 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+import { Container, getRandom } from "@cloudflare/containers";
+
+export class Backend extends Container {
+	defaultPort = 3000;
+	sleepAfter = "10m";
+}
+
+export interface Env {
+	BACKEND: DurableObjectNamespace<Backend>;
+}
 
 export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+	async fetch(request: Request, env: Env): Promise<Response> {
+		const containerInstance = await getRandom(env.BACKEND, 1);
+		return containerInstance.fetch(request);
 	},
 } satisfies ExportedHandler<Env>;
