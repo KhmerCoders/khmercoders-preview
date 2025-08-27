@@ -109,19 +109,29 @@ function KhmerCoderAccount({
 const app = express();
 const port = 3000;
 
-app.get('/', async (req: Request, res: Response) => {
-	const root = KhmerCoderAccount({
-		photoUrl: 'https://cdn.khmercoder.com/profiles/d76843b9-3939-403d-b227-a681dbc895b6.webp',
-		name: 'John Doe',
-		position: 'Founder',
-		username: `@khmertest`,
-		bio: 'Testing bio',
-		followingCount: 10,
-		follwersCount: 5,
-	});
+app.get('/preview/:profile', async (req: Request, res: Response) => {
 
-	const buffer = await sone(root, { cache: ASSETS_CACHE }).jpg(0.95);
-	res.type('jpeg').send(Buffer.from(buffer));
+	try {
+		const profile = req.params.profile;
+		const response = await fetch(`https://khmercoder.com/api/account/profile/${profile}`);
+		if (!response.ok) throw new Error('Profile not found');
+		const data = await response.json();
+
+		const root = KhmerCoderAccount({
+			photoUrl: data.image,
+			name: data.name,
+			position: data.position,
+			username: data.alias ? `@${data.alias}` : null,
+			bio: data.bio,
+			followingCount: data.followingCount,
+			follwersCount: data.followersCount,
+		});
+
+		const buffer = await sone(root, { cache: ASSETS_CACHE }).jpg(0.95);
+		res.type('jpeg').send(Buffer.from(buffer));
+	} catch (err) {
+		res.status(404).send('Profile not found or error fetching profile');
+	}
 });
 
 app.listen(port, () => {
