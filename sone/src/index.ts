@@ -128,8 +128,9 @@ app.get('/preview/:profile', async (req: Request, res: Response) => {
 		});
 
 		const buffer = await sone(root, { cache: ASSETS_CACHE }).jpg(0.95);
-		res.type('jpeg').send(Buffer.from(buffer));
+		res.set('Content-Type', 'image/jpeg').send(Buffer.from(buffer));
 	} catch (err) {
+		console.log(err);
 		res.status(404).send('Profile not found or error fetching profile');
 	}
 });
